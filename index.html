@@ -303,6 +303,13 @@ document.addEventListener("DOMContentLoaded", () => {
     // 既存の表示処理をここで呼ぶ
     renderDashboard(workLogs);
 }
+
+        // data.jsonとの接続
+fetch('data.json')
+  .then(res => res.json())
+  .then(data => {
+    console.log(data);
+  });
     </script>
 </body>
 </html>
