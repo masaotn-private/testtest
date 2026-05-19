@@ -221,7 +221,14 @@
         }
 
         // ページ読み込み時にダッシュボードを初期化
-        document.addEventListener("DOMContentLoaded", initDashboard);
+        
+// 古い（ダミーデータ用）
+/*
+document.addEventListener("DOMContentLoaded", initDashboard);
+*/
+
+// 新しい（API連動）
+        document.addEventListener("DOMContentLoaded", loadData);
         // 3. フォームの初期化（プルダウン生成とイベント設定）
 function initForm() {
     // 日付の初期値に本日（2026-05-19など）をセット
