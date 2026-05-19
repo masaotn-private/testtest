@@ -285,6 +285,17 @@ document.addEventListener("DOMContentLoaded", () => {
     initDashboard();
     initForm();
 });
+        async function loadData() {
+    const res = await fetch("http://127.0.0.1:8000/api/init-data");
+    const data = await res.json();
+
+    const workLogs = data.work_logs;
+
+    console.log(workLogs);
+
+    // 既存の表示処理をここで呼ぶ
+    renderDashboard(workLogs);
+}
     </script>
 </body>
 </html>
