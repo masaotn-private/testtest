@@ -21,6 +21,42 @@
     </header>
 
     <main class="max-w-7xl mx-auto px-4 py-8">
+        <!-- 実績入力フォームセクション -->
+<h2 class="text-lg font-bold text-gray-700 mb-4">新規稼働実績の入力</h2>
+<div class="bg-white p-6 rounded-xl shadow-xs border border-gray-100 mb-8">
+    <form id="work-log-form" class="grid grid-cols-1 md:grid-cols-5 gap-4 items-end">
+        <div>
+            <label class="block text-xs font-semibold text-gray-500 uppercase mb-1">稼働日</label>
+            <input type="date" id="form-date" required class="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-indigo-500">
+        </div>
+        <div>
+            <label class="block text-xs font-semibold text-gray-500 uppercase mb-1">使用機械</label>
+            <select id="form-machine" required class="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-indigo-500">
+                <!-- JSでマスタから動的生成 -->
+            </select>
+        </div>
+        <div>
+            <label class="block text-xs font-semibold text-gray-500 uppercase mb-1">受注案件</label>
+            <select id="form-project" required class="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-indigo-500">
+                <!-- JSでマスタから動的生成 -->
+            </select>
+        </div>
+        <div>
+            <label class="block text-xs font-semibold text-gray-500 uppercase mb-1">稼働時間 (H)</label>
+            <input type="number" id="form-hours" step="0.1" min="0.1" placeholder="例: 4.5" required class="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-indigo-500">
+        </div>
+        <!-- 適用単価（隠し項目、または自動設定される確認用。今回は確認用に表示） -->
+        <div>
+            <label class="block text-xs font-semibold text-gray-500 uppercase mb-1">適用単価 (円/H)</label>
+            <input type="number" id="form-price" readonly class="w-full bg-gray-100 border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-500 font-mono">
+        </div>
+        <div class="md:col-span-5 flex justify-end mt-2">
+            <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm px-6 py-2 rounded-lg transition shadow-xs cursor-pointer">
+                実績を登録する
+            </button>
+        </div>
+    </form>
+</div>
         <!-- セクション1: KPIサマリー (今月の概要) -->
         <h2 class="text-lg font-bold text-gray-700 mb-4">今月（2026年5月）の概要</h2>
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
@@ -186,6 +222,69 @@
 
         // ページ読み込み時にダッシュボードを初期化
         document.addEventListener("DOMContentLoaded", initDashboard);
+        // 3. フォームの初期化（プルダウン生成とイベント設定）
+function initForm() {
+    // 日付の初期値に本日（2026-05-19など）をセット
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById("form-date").value = today;
+
+    // 機械プルダウンの生成
+    const machineSelect = document.getElementById("form-machine");
+    machineSelect.innerHTML = '<option value="">選択してください</option>';
+    Object.keys(machines).forEach(id => {
+        machineSelect.insertAdjacentHTML("beforeend", `<option value="${id}">${machines[id].name}</option>`);
+    });
+
+    // 案件プルダウンの生成
+    const projectSelect = document.getElementById("form-project");
+    projectSelect.innerHTML = '<option value="">選択してください</option>';
+    Object.keys(projects).forEach(id => {
+        const clientName = clients[projects[id].client_id]?.name || "";
+        projectSelect.insertAdjacentHTML("beforeend", `<option value="${id}">[${clientName}] ${projects[id].name}</option>`);
+    });
+
+    // 機械が選択されたら、その機械の基準単価を自動セットする連動ロジック
+    machineSelect.addEventListener("change", (e) => {
+        const selectedId = e.target.value;
+        const unitPrice = machines[selectedId]?.default_unit_price || 0;
+        document.getElementById("form-price").value = unitPrice;
+    });
+
+    // フォーム送信（登録）時の処理
+    const form = document.getElementById("work-log-form");
+    form.addEventListener("submit", (e) => {
+        e.preventDefault(); // 画面リロードを防止
+
+        const machineId = parseInt(document.getElementById("form-machine").value);
+        const projectId = parseInt(document.getElementById("form-project").value);
+        const workHours = parseFloat(document.getElementById("form-hours").value);
+        const unitPrice = parseInt(document.getElementById("form-price").value);
+        const date = document.getElementById("form-date").value;
+
+        // 新しい実績データを配列の先頭に追加 (最新が上にくるようにする)
+        const newLog = {
+            id: workLogs.length + 1,
+            date: date,
+            machine_id: machineId,
+            project_id: projectId,
+            work_hours: workHours,
+            unit_price: unitPrice
+        };
+        workLogs.unshift(newLog);
+
+        // ダッシュボードを再集計・再描画
+        initDashboard();
+
+        // 稼働時間入力だけクリアして連続入力をスムーズに
+        document.getElementById("form-hours").value = "";
+    });
+}
+
+// 既存の読み込み時処理にフォーム初期化を追加
+document.addEventListener("DOMContentLoaded", () => {
+    initDashboard();
+    initForm();
+});
     </script>
 </body>
 </html>
