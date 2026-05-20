@@ -273,7 +273,7 @@ function initForm() {
 
     // フォーム送信（登録）時の処理
     const form = document.getElementById("work-log-form");
-    form.addEventListener("submit", (e) => {
+    form.addEventListener("submit", async (e) => {
         e.preventDefault(); // 画面リロードを防止
 
         const machineId = parseInt(document.getElementById("form-machine").value);
@@ -300,7 +300,7 @@ function initForm() {
         */
 
         // DB保存 + 再取得
-        await fetch("https://work-logs-api.onrender.com/api/work-logs", {
+await fetch("https://work-logs-api.onrender.com/api/work-logs", {
     method: "POST",
     headers: {
         "Content-Type": "application/json"
