@@ -100,6 +100,7 @@
         </tbody>
     </table>
 </div>
+
         <!-- セクション3: 直近の稼働実績ログ -->
         <h2 class="text-lg font-bold text-gray-700 mb-4">最近の稼働実績（ログ）</h2>
         <div class="bg-white rounded-xl shadow-xs border border-gray-100 overflow-hidden">
@@ -144,16 +145,8 @@
 
         // 実績トランザクション（価格 total_price は背後で自動計算させます）
         let workLogs = [];
-        // 上に修正した　APIのデータで上書きするため
-        /*
-        const workLogs = [
-            { id: 1, date: "2026-05-11", machine_id: 1, project_id: 1, work_hours: 6.5, unit_price: 8000 },
-            { id: 2, date: "2026-05-12", machine_id: 2, project_id: 2, work_hours: 7.0, unit_price: 5000 },
-            { id: 3, date: "2026-05-13", machine_id: 3, project_id: 3, work_hours: 4.5, unit_price: 6500 },
-            { id: 4, date: "2026-05-14", machine_id: 1, project_id: 2, work_hours: 5.0, unit_price: 8000 },
-            { id: 5, date: "2026-05-15", machine_id: 2, project_id: 1, work_hours: 8.0, unit_price: 5500 }
-        ];
-        */
+        // ✅ Chart インスタンスを保持する変数
+        let chartInstance = null;
 
         // 2. データ集計と画面への描写ロジック
         function initDashboard() {
@@ -230,152 +223,134 @@
                 `;
                 machineTableBody.insertAdjacentHTML("beforeend", row);
             });
+            
             // ✅ ここに追加
             renderChart();
         }
+
+        // ✅ 修正：Chart インスタンスを破棄してから新規作成
         function renderChart() {
+            // 既存のチャートが存在すれば破棄する
+            if (chartInstance !== null) {
+                chartInstance.destroy();
+                chartInstance = null;
+            }
 
-    const salesByDate = {};
+            const salesByDate = {};
 
-    workLogs.forEach(log => {
-        const revenue = log.work_hours * log.unit_price;
+            workLogs.forEach(log => {
+                const revenue = log.work_hours * log.unit_price;
 
-        if (!salesByDate[log.date]) {
-            salesByDate[log.date] = 0;
+                if (!salesByDate[log.date]) {
+                    salesByDate[log.date] = 0;
+                }
+
+                salesByDate[log.date] += revenue;
+            });
+
+            // ✅ インスタンスを保存
+            chartInstance = new Chart(document.getElementById("salesChart"), {
+                type: "bar",
+                data: {
+                    labels: Object.keys(salesByDate),
+                    datasets: [{
+                        label: "売上",
+                        data: Object.values(salesByDate),
+                        backgroundColor: "#4f46e5",
+                        borderColor: "#4338ca",
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: {
+                            display: true
+                        }
+                    }
+                }
+            });
         }
-
-        salesByDate[log.date] += revenue;
-    });
-
-    new Chart(document.getElementById("salesChart"), {
-        type: "bar",
-        data: {
-            labels: Object.keys(salesByDate),
-            datasets: [{
-                label: "売上",
-                data: Object.values(salesByDate),
-            }]
-        }
-    });
-}
 
         // ページ読み込み時にダッシュボードを初期化
-        
-// 古い（ダミーデータ用）
-/*
-document.addEventListener("DOMContentLoaded", initDashboard);
-*/
-
-/*
-// 新しい（API連動）
-        document.addEventListener("DOMContentLoaded", loadData);
-*/
-// initForm が先（UI準備）
-// loadData が後（データ取得）
-// 👉 これが正しい初期化順序
-document.addEventListener("DOMContentLoaded", async () => {
-    initForm();
-    await loadData();
-});
+        document.addEventListener("DOMContentLoaded", async () => {
+            initForm();
+            await loadData();
+        });
         
         // 3. フォームの初期化（プルダウン生成とイベント設定）
-function initForm() {
-    // 日付の初期値に本日（2026-05-19など）をセット
-    const today = new Date().toISOString().split('T')[0];
-    document.getElementById("form-date").value = today;
+        function initForm() {
+            // 日付の初期値に本日（2026-05-19など）をセット
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById("form-date").value = today;
 
-    // 機械プルダウンの生成
-    const machineSelect = document.getElementById("form-machine");
-    machineSelect.innerHTML = '<option value="">選択してください</option>';
-    Object.keys(machines).forEach(id => {
-        machineSelect.insertAdjacentHTML("beforeend", `<option value="${id}">${machines[id].name}</option>`);
-    });
+            // 機械プルダウンの生成
+            const machineSelect = document.getElementById("form-machine");
+            machineSelect.innerHTML = '<option value="">選択してください</option>';
+            Object.keys(machines).forEach(id => {
+                machineSelect.insertAdjacentHTML("beforeend", `<option value="${id}">${machines[id].name}</option>`);
+            });
 
-    // 案件プルダウンの生成
-    const projectSelect = document.getElementById("form-project");
-    projectSelect.innerHTML = '<option value="">選択してください</option>';
-    Object.keys(projects).forEach(id => {
-        const clientName = clients[projects[id].client_id]?.name || "";
-        projectSelect.insertAdjacentHTML("beforeend", `<option value="${id}">[${clientName}] ${projects[id].name}</option>`);
-    });
+            // 案件プルダウンの生成
+            const projectSelect = document.getElementById("form-project");
+            projectSelect.innerHTML = '<option value="">選択してください</option>';
+            Object.keys(projects).forEach(id => {
+                const clientName = clients[projects[id].client_id]?.name || "";
+                projectSelect.insertAdjacentHTML("beforeend", `<option value="${id}">[${clientName}] ${projects[id].name}</option>`);
+            });
 
-    // 機械が選択されたら、その機械の基準単価を自動セットする連動ロジック
-    machineSelect.addEventListener("change", (e) => {
-        const selectedId = e.target.value;
-        const unitPrice = machines[selectedId]?.default_unit_price || 0;
-        document.getElementById("form-price").value = unitPrice;
-    });
+            // 機械が選択されたら、その機械の基準単価を自動セットする連動ロジック
+            machineSelect.addEventListener("change", (e) => {
+                const selectedId = e.target.value;
+                const unitPrice = machines[selectedId]?.default_unit_price || 0;
+                document.getElementById("form-price").value = unitPrice;
+            });
 
-    // フォーム送信（登録）時の処理
-    const form = document.getElementById("work-log-form");
-    form.addEventListener("submit", async (e) => {
-        e.preventDefault(); // 画面リロードを防止
+            // フォーム送信（登録）時の処理
+            const form = document.getElementById("work-log-form");
+            form.addEventListener("submit", async (e) => {
+                e.preventDefault(); // 画面リロードを防止
 
-        const machineId = parseInt(document.getElementById("form-machine").value);
-        const projectId = parseInt(document.getElementById("form-project").value);
-        const workHours = parseFloat(document.getElementById("form-hours").value);
-        const unitPrice = parseInt(document.getElementById("form-price").value);
-        const date = document.getElementById("form-date").value;
+                const machineId = parseInt(document.getElementById("form-machine").value);
+                const projectId = parseInt(document.getElementById("form-project").value);
+                const workHours = parseFloat(document.getElementById("form-hours").value);
+                const unitPrice = parseInt(document.getElementById("form-price").value);
+                const date = document.getElementById("form-date").value;
 
-        // 新しい実績データを配列の先頭に追加 (最新が上にくるようにする)
-        const newLog = {
-            id: workLogs.length + 1,
-            date: date,
-            machine_id: machineId,
-            project_id: projectId,
-            work_hours: workHours,
-            unit_price: unitPrice
-        };
-        
-        /*
-        workLogs.unshift(newLog);
+                // 新しい実績データを配列の先頭に追加 (最新が上にくるようにする)
+                const newLog = {
+                    id: workLogs.length + 1,
+                    date: date,
+                    machine_id: machineId,
+                    project_id: projectId,
+                    work_hours: workHours,
+                    unit_price: unitPrice
+                };
 
-        // ダッシュボードを再集計・再描画
-        initDashboard();
-        */
+                // DB保存 + 再取得
+                await fetch("https://work-logs-api.onrender.com/api/work-logs", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(newLog)
+                });
 
-        // DB保存 + 再取得
-await fetch("https://work-logs-api.onrender.com/api/work-logs", {
-    method: "POST",
-    headers: {
-        "Content-Type": "application/json"
-    },
-    body: JSON.stringify(newLog)
-});
+                await loadData();
+                
+                // 稼働時間入力だけクリアして連続入力をスムーズに
+                document.getElementById("form-hours").value = "";
+            });
+        }
 
-await loadData();
-        
-        // 稼働時間入力だけクリアして連続入力をスムーズに
-        document.getElementById("form-hours").value = "";
-    });
-}
+        async function loadData() {
+            const res = await fetch("https://work-logs-api.onrender.com/api/work-logs");
+            const data = await res.json();
 
-// 既存の読み込み時処理にフォーム初期化を追加
-        // エラーのため　これ削除
-/* document.addEventListener("DOMContentLoaded", () => {
-    initDashboard();
-    initForm();
-}); */
-    async function loadData() {
-    const res = await fetch("https://work-logs-api.onrender.com/api/work-logs");
-    const data = await res.json();
-
-    /*
-    const workLogs = data.work_logs;
-    console.log(workLogs);
-
-    // 既存の表示処理をここで呼ぶ
-    renderDashboard(workLogs);
-    */
-
-// APIは 配列 を返す → data.work_logs ❌
-// 関数は initDashboard() → renderDashboard() ❌
-
-    workLogs = data;
-    initDashboard();
-
-            
-}
+            workLogs = data;
+            initDashboard();
+        }
     </script>
 </body>
 </html>
