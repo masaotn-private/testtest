@@ -316,11 +316,12 @@ await loadData();
 }
 
 // 既存の読み込み時処理にフォーム初期化を追加
-document.addEventListener("DOMContentLoaded", () => {
+        // エラーのため　これ削除
+/* document.addEventListener("DOMContentLoaded", () => {
     initDashboard();
     initForm();
-});
-        async function loadData() {
+}); */
+    async function loadData() {
     const res = await fetch("https://work-logs-api.onrender.com/api/work-logs");
     const data = await res.json();
 
