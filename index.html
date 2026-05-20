@@ -135,6 +135,9 @@
         };
 
         // 実績トランザクション（価格 total_price は背後で自動計算させます）
+        let workLogs = [];
+        // 上に修正した　APIのデータで上書きするため
+        /*
         const workLogs = [
             { id: 1, date: "2026-05-11", machine_id: 1, project_id: 1, work_hours: 6.5, unit_price: 8000 },
             { id: 2, date: "2026-05-12", machine_id: 2, project_id: 2, work_hours: 7.0, unit_price: 5000 },
@@ -142,6 +145,7 @@
             { id: 4, date: "2026-05-14", machine_id: 1, project_id: 2, work_hours: 5.0, unit_price: 8000 },
             { id: 5, date: "2026-05-15", machine_id: 2, project_id: 1, work_hours: 8.0, unit_price: 5500 }
         ];
+        */
 
         // 2. データ集計と画面への描写ロジック
         function initDashboard() {
@@ -227,8 +231,18 @@
 document.addEventListener("DOMContentLoaded", initDashboard);
 */
 
+/*
 // 新しい（API連動）
         document.addEventListener("DOMContentLoaded", loadData);
+*/
+// initForm が先（UI準備）
+// loadData が後（データ取得）
+// 👉 これが正しい初期化順序
+document.addEventListener("DOMContentLoaded", async () => {
+    initForm();
+    await loadData();
+});
+        
         // 3. フォームの初期化（プルダウン生成とイベント設定）
 function initForm() {
     // 日付の初期値に本日（2026-05-19など）をセット
@@ -277,11 +291,25 @@ function initForm() {
             work_hours: workHours,
             unit_price: unitPrice
         };
+        
+        /*
         workLogs.unshift(newLog);
 
         // ダッシュボードを再集計・再描画
         initDashboard();
+        */
 
+        // DB保存 + 再取得
+        await fetch("http://127.0.0.1:8001/api/work-logs", {
+    method: "POST",
+    headers: {
+        "Content-Type": "application/json"
+    },
+    body: JSON.stringify(newLog)
+});
+
+await loadData();
+        
         // 稼働時間入力だけクリアして連続入力をスムーズに
         document.getElementById("form-hours").value = "";
     });
@@ -296,16 +324,25 @@ document.addEventListener("DOMContentLoaded", () => {
     const res = await fetch("http://127.0.0.1:8001/api/work-logs");
     const data = await res.json();
 
+    /*
     const workLogs = data.work_logs;
-
     console.log(workLogs);
 
     // 既存の表示処理をここで呼ぶ
     renderDashboard(workLogs);
+    */
+
+// APIは 配列 を返す → data.work_logs ❌
+// 関数は initDashboard() → renderDashboard() ❌
+
+    workLogs = data;
+    initDashboard();
+
+            
 }
 
         // data.jsonとの接続
-fetch('data.json')
+// fetch('data.json')
   .then(res => res.json())
   .then(data => {
     console.log(data);
