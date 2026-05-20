@@ -162,9 +162,25 @@
 
             const logTableBody = document.getElementById("work-log-table");
             logTableBody.innerHTML = "";
+            
+            // ✅ 今月判定を追加
+            const now = new Date();
+            const currentYear = now.getFullYear();
+            const currentMonth = now.getMonth(); // 0~11
 
             // 実績ログをループ処理して各集計を行う
             workLogs.forEach(log => {
+
+                const logDate = new Date(log.date);
+                
+                        // ✅ ★ここが追加（今月以外はスキップ）
+                        if (
+                            logDate.getFullYear() !== currentYear ||
+                            logDate.getMonth() !== currentMonth
+                        ) {
+                            return;
+                        }
+
                 // 価格の自動計算 (稼働時間 * 単価)
                 const totalPrice = log.work_hours * log.unit_price;
                 
