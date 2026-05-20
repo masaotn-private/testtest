@@ -1,315 +1,189 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>設備稼働率管理システム - ダッシュボード</title>
-    <!-- Tailwind CSS (CDN経由で手軽に導入) -->
-    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>設備稼働率管理システム</title>
+<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
 </head>
+
 <body class="bg-gray-50 text-gray-800 font-sans">
 
-    <!-- ナビゲーションバー -->
-    <header class="bg-indigo-600 text-white shadow-md">
-        <div class="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
-            <h1 class="text-xl font-bold tracking-tight">設備稼働管理システム</h1>
-            <nav class="space-x-4">
-                <a href="#" class="font-semibold underline">ダッシュボード</a>
-                <a href="#" class="text-indigo-200 hover:text-white transition">実績入力</a>
-            </nav>
-        </div>
-    </header>
+<main class="max-w-5xl mx-auto p-6">
 
-    <main class="max-w-7xl mx-auto px-4 py-8">
-        <!-- 実績入力フォームセクション -->
-<h2 class="text-lg font-bold text-gray-700 mb-4">新規稼働実績の入力</h2>
-<div class="bg-white p-6 rounded-xl shadow-xs border border-gray-100 mb-8">
-    <form id="work-log-form" class="grid grid-cols-1 md:grid-cols-5 gap-4 items-end">
-        <div>
-            <label class="block text-xs font-semibold text-gray-500 uppercase mb-1">稼働日</label>
-            <input type="date" id="form-date" required class="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-indigo-500">
-        </div>
-        <div>
-            <label class="block text-xs font-semibold text-gray-500 uppercase mb-1">使用機械</label>
-            <select id="form-machine" required class="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-indigo-500">
-                <!-- JSでマスタから動的生成 -->
-            </select>
-        </div>
-        <div>
-            <label class="block text-xs font-semibold text-gray-500 uppercase mb-1">受注案件</label>
-            <select id="form-project" required class="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-indigo-500">
-                <!-- JSでマスタから動的生成 -->
-            </select>
-        </div>
-        <div>
-            <label class="block text-xs font-semibold text-gray-500 uppercase mb-1">稼働時間 (H)</label>
-            <input type="number" id="form-hours" step="0.1" min="0.1" placeholder="例: 4.5" required class="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-indigo-500">
-        </div>
-        <!-- 適用単価（隠し項目、または自動設定される確認用。今回は確認用に表示） -->
-        <div>
-            <label class="block text-xs font-semibold text-gray-500 uppercase mb-1">適用単価 (円/H)</label>
-            <input type="number" id="form-price" readonly class="w-full bg-gray-100 border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-500 font-mono">
-        </div>
-        <div class="md:col-span-5 flex justify-end mt-2">
-            <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm px-6 py-2 rounded-lg transition shadow-xs cursor-pointer">
-                実績を登録する
-            </button>
-        </div>
-    </form>
+<h1 class="text-2xl font-bold mb-6">設備稼働管理ダッシュボード</h1>
+
+<!-- フォーム -->
+<form id="work-log-form" class="grid grid-cols-2 md:grid-cols-5 gap-3 mb-6">
+
+<input type="date" id="form-date" required class="border p-2">
+
+<select id="form-machine" class="border p-2"></select>
+
+<select id="form-project" class="border p-2"></select>
+
+<input type="number" id="form-hours" step="0.1" placeholder="時間" class="border p-2">
+
+<input type="number" id="form-price" readonly class="border p-2 bg-gray-100">
+
+<button class="bg-blue-600 text-white px-4 py-2 col-span-2 md:col-span-5">
+登録
+</button>
+
+</form>
+
+<!-- KPI -->
+<div class="flex gap-6 mb-6">
+<div>稼働時間: <span id="kpi-hours">0</span></div>
+<div>売上: <span id="kpi-revenue">0</span></div>
 </div>
-        <!-- セクション1: KPIサマリー (今月の概要) -->
-        <h2 class="text-lg font-bold text-gray-700 mb-4">今月（2026年5月）の概要</h2>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <div class="bg-white p-6 rounded-xl shadow-xs border border-gray-100">
-                <p class="text-sm font-medium text-gray-500 uppercase tracking-wider">総稼働時間</p>
-                <p class="text-3xl font-bold text-indigo-600 mt-2" id="kpi-hours">0.0 <span class="text-sm font-normal text-gray-400">時間</span></p>
-            </div>
-            <div class="bg-white p-6 rounded-xl shadow-xs border border-gray-100">
-                <p class="text-sm font-medium text-gray-500 uppercase tracking-wider">総加工費（売上金額）</p>
-                <p class="text-3xl font-bold text-emerald-600 mt-2" id="kpi-revenue">¥0 <span class="text-sm font-normal text-gray-400"></span></p>
-            </div>
-            <div class="bg-white p-6 rounded-xl shadow-xs border border-gray-100">
-                <p class="text-sm font-medium text-gray-500 uppercase tracking-wider">稼働中の機械</p>
-                <p class="text-3xl font-bold text-amber-500 mt-2" id="kpi-active-machines">0 / 3 <span class="text-sm font-normal text-gray-400">台</span></p>
-            </div>
-        </div>
 
-        <!-- セクション2: 機械別の稼働状況（Grid分析ビュー） -->
-        <h2 class="text-lg font-bold text-gray-700 mb-4">機械別 稼働・収益集計</h2>
-        <div class="bg-white rounded-xl shadow-xs border border-gray-100 overflow-hidden mb-8">
-            <table class="min-w-full divide-y divide-gray-200 text-left text-sm">
-                <thead class="bg-gray-50 text-gray-500 uppercase tracking-wider font-semibold text-xs">
-                    <tr>
-                        <th class="px-6 py-3">機械名</th>
-                        <th class="px-6 py-3">基準単価</th>
-                        <th class="px-6 py-3">合計稼働時間</th>
-                        <th class="px-6 py-3">合計売上</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-gray-200 text-gray-700" id="machine-summary-table">
-                    <!-- JSで動的に生成 -->
-                </tbody>
-            </table>
-        </div>
+<!-- テーブル -->
+<table class="w-full border text-sm">
+<thead>
+<tr class="bg-gray-100">
+<th>日付</th>
+<th>機械</th>
+<th>案件</th>
+<th>時間</th>
+<th>単価</th>
+<th>売上</th>
+</tr>
+</thead>
+<tbody id="work-log-table"></tbody>
+</table>
 
-        <!-- セクション3: 直近の稼働実績ログ -->
-        <h2 class="text-lg font-bold text-gray-700 mb-4">最近の稼働実績（ログ）</h2>
-        <div class="bg-white rounded-xl shadow-xs border border-gray-100 overflow-hidden">
-            <table class="min-w-full divide-y divide-gray-200 text-left text-sm">
-                <thead class="bg-gray-50 text-gray-500 uppercase tracking-wider font-semibold text-xs">
-                    <tr>
-                        <th class="px-6 py-3">日付</th>
-                        <th class="px-6 py-3">使用機械</th>
-                        <th class="px-6 py-3">取引先 / 受注案件名</th>
-                        <th class="px-6 py-3 text-right">稼働時間</th>
-                        <th class="px-6 py-3 text-right">適用単価</th>
-                        <th class="px-6 py-3 text-right">価格 (自動計算)</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-gray-200 text-gray-700" id="work-log-table">
-                    <!-- JSで動的に生成 -->
-                </tbody>
-            </table>
-        </div>
-    </main>
+</main>
 
-    <!-- データ管理と集計用のロジックJavaScript -->
-    <script>
-        // 1. ダミーデータの定義 (DBのテーブル構造を模倣)
-        const clients = {
-            1: { name: "株式会社AAテクノロジー" },
-            2: { name: "BB工業株式会社" },
-            3: { name: "CC精密マニュファクチャリング" }
-        };
+<script>
 
-        const projects = {
-            1: { client_id: 1, name: "航空機部品 試作プロジェクト" },
-            2: { client_id: 2, name: "自動車用金型 量産ロットB" },
-            3: { client_id: 3, name: "医療機器向け微細シャフト加工" }
-        };
+// ===== マスタ =====
+const clients = {
+ 1: { name: "AAテクノロジー" },
+ 2: { name: "BB工業" },
+};
 
-        const machines = {
-            1: { name: "5軸マシニングセンタ M1", default_unit_price: 8000 },
-            2: { name: "NC旋盤 L2", default_unit_price: 5000 },
-            3: { name: "ワイヤー放電加工機 W3", default_unit_price: 6500 }
-        };
+const projects = {
+ 1: { client_id: 1, name: "試作" },
+ 2: { client_id: 2, name: "量産" },
+};
 
-        // 実績トランザクション（価格 total_price は背後で自動計算させます）
-        const workLogs = [
-            { id: 1, date: "2026-05-11", machine_id: 1, project_id: 1, work_hours: 6.5, unit_price: 8000 },
-            { id: 2, date: "2026-05-12", machine_id: 2, project_id: 2, work_hours: 7.0, unit_price: 5000 },
-            { id: 3, date: "2026-05-13", machine_id: 3, project_id: 3, work_hours: 4.5, unit_price: 6500 },
-            { id: 4, date: "2026-05-14", machine_id: 1, project_id: 2, work_hours: 5.0, unit_price: 8000 },
-            { id: 5, date: "2026-05-15", machine_id: 2, project_id: 1, work_hours: 8.0, unit_price: 5500 }
-        ];
+const machines = {
+ 1: { name: "M1", default_unit_price: 8000 },
+ 2: { name: "L2", default_unit_price: 5000 },
+};
 
-        // 2. データ集計と画面への描写ロジック
-        function initDashboard() {
-            let totalHours = 0;
-            let totalRevenue = 0;
-            let activeMachinesSet = new Set();
+// ===== DBデータ（APIから入る）=====
+let workLogs = [];
 
-            // 機械別集計用の初期箱を準備
-            const machineSummary = {};
-            Object.keys(machines).forEach(id => {
-                machineSummary[id] = { hours: 0, revenue: 0 };
-            });
+// ===== データ取得 =====
+async function loadData() {
+  const res = await fetch("http://127.0.0.1:8001/api/work-logs");
+  const data = await res.json();
 
-            const logTableBody = document.getElementById("work-log-table");
-            logTableBody.innerHTML = "";
+  workLogs = data;
 
-            // 実績ログをループ処理して各集計を行う
-            workLogs.forEach(log => {
-                // 価格の自動計算 (稼働時間 * 単価)
-                const totalPrice = log.work_hours * log.unit_price;
-                
-                // 全体KPIへの加算
-                totalHours += log.work_hours;
-                totalRevenue += totalPrice;
-                activeMachinesSet.add(log.machine_id);
-
-                // 機械別集集計への加算
-                if (machineSummary[log.machine_id]) {
-                    machineSummary[log.machine_id].hours += log.work_hours;
-                    machineSummary[log.machine_id].revenue += totalPrice;
-                }
-
-                // マスタ情報の引っ張り（結合処理の模倣）
-                const machineName = machines[log.machine_id]?.name || "不明な機械";
-                const project = projects[log.project_id];
-                const clientName = clients[project?.client_id]?.name || "不明な取引先";
-                const projectName = project?.name || "不明な案件";
-
-                // 実績ログ行の追加
-                const row = `
-                    <tr class="hover:bg-gray-50 transition">
-                        <td class="px-6 py-4 whitespace-nowrap font-medium text-gray-500">${log.date}</td>
-                        <td class="px-6 py-4 whitespace-nowrap font-semibold">${machineName}</td>
-                        <td class="px-6 py-4">
-                            <div class="text-xs text-gray-400">${clientName}</div>
-                            <div class="text-sm font-medium">${projectName}</div>
-                        </td>
-                        <td class="px-6 py-4 text-right font-mono">${log.work_hours.toFixed(1)} H</td>
-                        <td class="px-6 py-4 text-right font-mono">¥${log.unit_price.toLocaleString()}</td>
-                        <td class="px-6 py-4 text-right font-mono font-bold text-gray-900">¥${totalPrice.toLocaleString()}</td>
-                    </tr>
-                `;
-                logTableBody.insertAdjacentHTML("beforeend", row);
-            });
-
-            // KPIサマリー数値を画面に反映
-            document.getElementById("kpi-hours").innerHTML = `${totalHours.toFixed(1)} <span class="text-sm font-normal text-gray-400">時間</span>`;
-            document.getElementById("kpi-revenue").innerText = `¥${totalRevenue.toLocaleString()}`;
-            document.getElementById("kpi-active-machines").innerHTML = `${activeMachinesSet.size} / ${Object.keys(machines).length} <span class="text-sm font-normal text-gray-400">台</span>`;
-
-            // 機械別集計テーブルの描画
-            const machineTableBody = document.getElementById("machine-summary-table");
-            machineTableBody.innerHTML = "";
-            Object.keys(machines).forEach(id => {
-                const machine = machines[id];
-                const summary = machineSummary[id];
-                const row = `
-                    <tr class="hover:bg-gray-50 transition">
-                        <td class="px-6 py-4 whitespace-nowrap font-semibold">${machine.name}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-gray-500 font-mono">¥${machine.default_unit_price.toLocaleString()} /H</td>
-                        <td class="px-6 py-4 whitespace-nowrap font-mono font-medium">${summary.hours.toFixed(1)} H</td>
-                        <td class="px-6 py-4 whitespace-nowrap font-mono font-bold text-indigo-600">¥${summary.revenue.toLocaleString()}</td>
-                    </tr>
-                `;
-                machineTableBody.insertAdjacentHTML("beforeend", row);
-            });
-        }
-
-        // ページ読み込み時にダッシュボードを初期化
-        
-// 古い（ダミーデータ用）
-/*
-document.addEventListener("DOMContentLoaded", initDashboard);
-*/
-
-// 新しい（API連動）
-        document.addEventListener("DOMContentLoaded", loadData);
-        // 3. フォームの初期化（プルダウン生成とイベント設定）
-function initForm() {
-    // 日付の初期値に本日（2026-05-19など）をセット
-    const today = new Date().toISOString().split('T')[0];
-    document.getElementById("form-date").value = today;
-
-    // 機械プルダウンの生成
-    const machineSelect = document.getElementById("form-machine");
-    machineSelect.innerHTML = '<option value="">選択してください</option>';
-    Object.keys(machines).forEach(id => {
-        machineSelect.insertAdjacentHTML("beforeend", `<option value="${id}">${machines[id].name}</option>`);
-    });
-
-    // 案件プルダウンの生成
-    const projectSelect = document.getElementById("form-project");
-    projectSelect.innerHTML = '<option value="">選択してください</option>';
-    Object.keys(projects).forEach(id => {
-        const clientName = clients[projects[id].client_id]?.name || "";
-        projectSelect.insertAdjacentHTML("beforeend", `<option value="${id}">[${clientName}] ${projects[id].name}</option>`);
-    });
-
-    // 機械が選択されたら、その機械の基準単価を自動セットする連動ロジック
-    machineSelect.addEventListener("change", (e) => {
-        const selectedId = e.target.value;
-        const unitPrice = machines[selectedId]?.default_unit_price || 0;
-        document.getElementById("form-price").value = unitPrice;
-    });
-
-    // フォーム送信（登録）時の処理
-    const form = document.getElementById("work-log-form");
-    form.addEventListener("submit", (e) => {
-        e.preventDefault(); // 画面リロードを防止
-
-        const machineId = parseInt(document.getElementById("form-machine").value);
-        const projectId = parseInt(document.getElementById("form-project").value);
-        const workHours = parseFloat(document.getElementById("form-hours").value);
-        const unitPrice = parseInt(document.getElementById("form-price").value);
-        const date = document.getElementById("form-date").value;
-
-        // 新しい実績データを配列の先頭に追加 (最新が上にくるようにする)
-        const newLog = {
-            id: workLogs.length + 1,
-            date: date,
-            machine_id: machineId,
-            project_id: projectId,
-            work_hours: workHours,
-            unit_price: unitPrice
-        };
-        workLogs.unshift(newLog);
-
-        // ダッシュボードを再集計・再描画
-        initDashboard();
-
-        // 稼働時間入力だけクリアして連続入力をスムーズに
-        document.getElementById("form-hours").value = "";
-    });
+  render();
 }
 
-// 既存の読み込み時処理にフォーム初期化を追加
-document.addEventListener("DOMContentLoaded", () => {
-    initDashboard();
-    initForm();
-});
-        async function loadData() {
-    const res = await fetch("http://127.0.0.1:8001/api/work-logs");
-    const data = await res.json();
+// ===== 描画 =====
+function render() {
+  let totalHours = 0;
+  let totalRevenue = 0;
 
-    const workLogs = data.work_logs;
+  const tbody = document.getElementById("work-log-table");
+  tbody.innerHTML = "";
 
-    console.log(workLogs);
+  workLogs.forEach(log => {
 
-    // 既存の表示処理をここで呼ぶ
-    renderDashboard(workLogs);
-}
+    const revenue = log.work_hours * log.unit_price;
+    totalHours += log.work_hours;
+    totalRevenue += revenue;
 
-        // data.jsonとの接続
-fetch('data.json')
-  .then(res => res.json())
-  .then(data => {
-    console.log(data);
+    const machine = machines[log.machine_id]?.name || "-";
+    const project = projects[log.project_id]?.name || "-";
+
+    const row = `
+    <tr>
+      <td>${log.date}</td>
+      <td>${machine}</td>
+      <td>${project}</td>
+      <td>${log.work_hours}</td>
+      <td>${log.unit_price}</td>
+      <td>${revenue}</td>
+    </tr>
+    `;
+
+    tbody.insertAdjacentHTML("beforeend", row);
   });
-    </script>
+
+  document.getElementById("kpi-hours").innerText = totalHours.toFixed(1);
+  document.getElementById("kpi-revenue").innerText = totalRevenue.toLocaleString();
+
+}
+
+// ===== フォーム =====
+function initForm() {
+
+  // 初期日付
+  document.getElementById("form-date").value =
+    new Date().toISOString().split("T")[0];
+
+  // 機械
+  const m = document.getElementById("form-machine");
+  m.innerHTML = Object.keys(machines).map(id =>
+    `<option value="${id}">${machines[id].name}</option>`
+  ).join("");
+
+  // 案件
+  const p = document.getElementById("form-project");
+  p.innerHTML = Object.keys(projects).map(id =>
+    `<option value="${id}">${projects[id].name}</option>`
+  ).join("");
+
+  // 単価連動
+  m.addEventListener("change", e => {
+    document.getElementById("form-price").value =
+      machines[e.target.value].default_unit_price;
+  });
+
+  // 初期単価
+  document.getElementById("form-price").value =
+    machines[1].default_unit_price;
+
+  // 登録処理
+  document.getElementById("work-log-form").addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const newLog = {
+      date: document.getElementById("form-date").value,
+      machine_id: parseInt(document.getElementById("form-machine").value),
+      project_id: parseInt(document.getElementById("form-project").value),
+      work_hours: parseFloat(document.getElementById("form-hours").value),
+      unit_price: parseInt(document.getElementById("form-price").value)
+    };
+
+    // ✅ APIへ保存
+    await fetch("http://127.0.0.1:8001/api/work-logs", {
+      method: "POST",
+      headers: {"Content-Type":"application/json"},
+      body: JSON.stringify(newLog)
+    });
+
+    // ✅ 再取得
+    await loadData();
+
+    document.getElementById("form-hours").value = "";
+  });
+
+}
+
+// ===== 初期化 =====
+document.addEventListener("DOMContentLoaded", () => {
+  initForm();
+  loadData();
+});
+
+</script>
 </body>
 </html>
