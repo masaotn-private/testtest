@@ -244,7 +244,7 @@
             renderChart();
         }
 
-        // ✅ 修正：Chart インスタンスを破棄してから新規作成
+        // ✅ 修正：直近30日間のすべての日付を表示し、データがない日は0で表示
         function renderChart() {
             // 既存のチャートが存在すれば破棄する
             if (chartInstance !== null) {
@@ -252,30 +252,41 @@
                 chartInstance = null;
             }
 
+            // ✅ 今日から遡って30日分の日付を生成
+            const today = new Date();
+            const last30Days = [];
+            for (let i = 29; i >= 0; i--) {
+                const date = new Date(today);
+                date.setDate(date.getDate() - i);
+                const dateStr = date.toISOString().split('T')[0]; // YYYY-MM-DD形式
+                last30Days.push(dateStr);
+            }
+
+            // 売上データを集計（すべてのログが対象）
             const salesByDate = {};
+            last30Days.forEach(date => {
+                salesByDate[date] = 0; // デフォルトは0
+            });
 
             workLogs.forEach(log => {
                 const revenue = log.work_hours * log.unit_price;
-
-                if (!salesByDate[log.date]) {
-                    salesByDate[log.date] = 0;
+                if (salesByDate.hasOwnProperty(log.date)) {
+                    salesByDate[log.date] += revenue;
                 }
-
-                salesByDate[log.date] += revenue;
             });
 
-            // ✅ 日付をソートして配列に変換
-            const sortedDates = Object.keys(salesByDate).sort((a, b) => new Date(a) - new Date(b));
-            const sortedValues = sortedDates.map(date => salesByDate[date]);
+            // 30日分のデータを配列に変換（順序は固定）
+            const labels = last30Days;
+            const values = last30Days.map(date => salesByDate[date]);
 
             // ✅ インスタンスを保存
             chartInstance = new Chart(document.getElementById("salesChart"), {
                 type: "bar",
                 data: {
-                    labels: sortedDates,
+                    labels: labels,
                     datasets: [{
                         label: "売上",
-                        data: sortedValues,
+                        data: values,
                         backgroundColor: "#4f46e5",
                         borderColor: "#4338ca",
                         borderWidth: 1
@@ -287,6 +298,11 @@
                     plugins: {
                         legend: {
                             display: true
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true
                         }
                     }
                 }
