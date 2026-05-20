@@ -44,7 +44,7 @@
         </div>
         <div>
             <label class="block text-xs font-semibold text-gray-500 uppercase mb-1">稼働時間 (H)</label>
-            <input type="number" id="form-hours" step="0.1" min="0.1" placeholder="例: 4.5" required class="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-indigo-500">
+            <input type="number" id="form-hours" step="0.1" min="0.1" placeholder="例: 4.5" required class="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-indigo-[...]
         </div>
         <!-- 適用単価（隠し項目、または自動設定される確認用。今回は確認用に表示） -->
         <div>
@@ -264,14 +264,18 @@
                 salesByDate[log.date] += revenue;
             });
 
+            // ✅ 日付をソートして配列に変換
+            const sortedDates = Object.keys(salesByDate).sort((a, b) => new Date(a) - new Date(b));
+            const sortedValues = sortedDates.map(date => salesByDate[date]);
+
             // ✅ インスタンスを保存
             chartInstance = new Chart(document.getElementById("salesChart"), {
                 type: "bar",
                 data: {
-                    labels: Object.keys(salesByDate),
+                    labels: sortedDates,
                     datasets: [{
                         label: "売上",
-                        data: Object.values(salesByDate),
+                        data: sortedValues,
                         backgroundColor: "#4f46e5",
                         borderColor: "#4338ca",
                         borderWidth: 1
