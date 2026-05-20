@@ -6,6 +6,7 @@
     <title>設備稼働率管理システム - ダッシュボード</title>
     <!-- Tailwind CSS (CDN経由で手軽に導入) -->
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> <!-- ✅ 追加 -->
 </head>
 <body class="bg-gray-50 text-gray-800 font-sans">
 
@@ -75,23 +76,30 @@
         </div>
 
         <!-- セクション2: 機械別の稼働状況（Grid分析ビュー） -->
-        <h2 class="text-lg font-bold text-gray-700 mb-4">機械別 稼働・収益集計</h2>
-        <div class="bg-white rounded-xl shadow-xs border border-gray-100 overflow-hidden mb-8">
-            <table class="min-w-full divide-y divide-gray-200 text-left text-sm">
-                <thead class="bg-gray-50 text-gray-500 uppercase tracking-wider font-semibold text-xs">
-                    <tr>
-                        <th class="px-6 py-3">機械名</th>
-                        <th class="px-6 py-3">基準単価</th>
-                        <th class="px-6 py-3">合計稼働時間</th>
-                        <th class="px-6 py-3">合計売上</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-gray-200 text-gray-700" id="machine-summary-table">
-                    <!-- JSで動的に生成 -->
-                </tbody>
-            </table>
-        </div>
+<h2 class="text-lg font-bold text-gray-700 mb-4">機械別 稼働・収益集計</h2>
 
+<!-- グラフセクション -->
+<div class="bg-white p-6 rounded-xl shadow-xs border border-gray-100 overflow-hidden mb-8">
+    <h3 class="text-sm font-semibold text-gray-600 mb-4">売上推移</h3>
+    <canvas id="salesChart"></canvas>
+</div>
+
+<!-- テーブルセクション -->
+<div class="bg-white rounded-xl shadow-xs border border-gray-100 overflow-hidden mb-8">
+    <table class="min-w-full divide-y divide-gray-200 text-left text-sm">
+        <thead class="bg-gray-50 text-gray-500 uppercase tracking-wider font-semibold text-xs">
+            <tr>
+                <th class="px-6 py-3">機械名</th>
+                <th class="px-6 py-3">基準単価</th>
+                <th class="px-6 py-3">合計稼働時間</th>
+                <th class="px-6 py-3">合計売上</th>
+            </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-200 text-gray-700" id="machine-summary-table">
+            <!-- JSで動的に生成 -->
+        </tbody>
+    </table>
+</div>
         <!-- セクション3: 直近の稼働実績ログ -->
         <h2 class="text-lg font-bold text-gray-700 mb-4">最近の稼働実績（ログ）</h2>
         <div class="bg-white rounded-xl shadow-xs border border-gray-100 overflow-hidden">
@@ -222,7 +230,34 @@
                 `;
                 machineTableBody.insertAdjacentHTML("beforeend", row);
             });
+            // ✅ ここに追加
+            renderChart();
         }
+        function renderChart() {
+
+    const salesByDate = {};
+
+    workLogs.forEach(log => {
+        const revenue = log.work_hours * log.unit_price;
+
+        if (!salesByDate[log.date]) {
+            salesByDate[log.date] = 0;
+        }
+
+        salesByDate[log.date] += revenue;
+    });
+
+    new Chart(document.getElementById("salesChart"), {
+        type: "bar",
+        data: {
+            labels: Object.keys(salesByDate),
+            datasets: [{
+                label: "売上",
+                data: Object.values(salesByDate),
+            }]
+        }
+    });
+}
 
         // ページ読み込み時にダッシュボードを初期化
         
