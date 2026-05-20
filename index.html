@@ -293,7 +293,7 @@ document.addEventListener("DOMContentLoaded", () => {
     initForm();
 });
         async function loadData() {
-    const res = await fetch("http://127.0.0.1:8000/api/init-data");
+    const res = await fetch("http://127.0.0.1:8001/api/work-logs");
     const data = await res.json();
 
     const workLogs = data.work_logs;
